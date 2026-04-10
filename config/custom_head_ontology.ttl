@@ -1,0 +1,19 @@
+@prefix : <http://example.org/ib-mouse-kg/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+:kg a owl:Ontology .
+
+:entity a owl:Class ; rdfs:label "entity" .
+
+:association a owl:Class ;
+  rdfs:subClassOf :entity ;
+  rdfs:label "association" .
+
+:gene a owl:Class ;
+  rdfs:subClassOf :entity ;
+  rdfs:label "gene" .
+
+:phenotype a owl:Class ;
+  rdfs:subClassOf :entity ;
+  rdfs:label "phenotype" .

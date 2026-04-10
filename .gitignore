@@ -132,3 +132,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .idea
+data/E-GEOD-63813.rpt
+data/E-GEOD-65775.rpt
+data/E-ERAD-169.rpt

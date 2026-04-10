@@ -1,207 +1,108 @@
-# BioCypher project template
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/gNj7_8fL)
+# HW 3. Functions 
 
-> [!NOTE]
-> This template is deprecated. In the future, we will maintain our
-> [cookiecutter](https://github.com/biocypher/biocypher-cookiecutter-template)
-> template instead.
 
-A quick way to set up a BioCypher-driven knowledge graph pipeline. Please make
-sure to refer to the [Usage](#-usage) section for details on how it works.
+### 1. Как получить ДЗ
 
-## Using the GitHub Template functionality
+С этого момента мы начнем работать через систему GitHub Classrom. Она удобна тем что там автоматизированы некоторые вещи для учебы.
 
-You can use this template in GitHub directly. Just select 
-`biocypher/project-template` as your template when creating a new repository
-on GitHub.
+1) Примите задание по ссылке
+2) Для вас будет создан ваш индивидуальный приватный репозиторий. 
+3) Склонируйте его (`git clone`) и работайте локально.
 
-## ⚙️ Installation (local, for docker see below)
+❗️❗️ Тут **НЕ НУЖНО** создавать новых веток, бот GitHub Classrom сам со всем разберется
 
-> [!NOTE]
-> These are manual installation instructions. If you created the repository
-> using the above GitHub template functionality, you don't need to do the
-> first two steps. Instead, just clone the repository you have created.
+Просто склонируйте репозиторий и сразу пишите в нем код.
 
-1. Clone this repository and rename to your project name.
-```{bash}
-git clone https://github.com/biocypher/project-template.git
-mv project-template my-project
-cd my-project
-```
-2. Make the repository your own.
-```{bash}
-rm -rf .git
-git init
-git add .
-git commit -m "Initial commit"
-# (you can add your remote repository here)
-```
-3. Install the dependencies. We recommend [uv](https://docs.astral.sh/uv/) for best performance, but [Poetry](https://python-poetry.org/) is also supported:
+### 2. Как сдать ДЗ
 
-!!! Note:
-    The BioCypher project is in the process of migrating to uv.
-    We recommend all users adopt uv, as backward compatibility with Poetry is planned to be phased out in future versions.
+1) Сперва проверьте что вы всё сделали как хотели
+2) Потом просто сделайте `git push` и всё:). Бот сам создает pull-request, в котором вы сможете найти фидбек преподавателя
 
-**Using uv (recommended):**
-```{bash}
-uv sync
-```
+## Основное задание
 
-**Using Poetry:**
-```{bash}
-poetry install
+В качестве данного ДЗ вам будет необходимо написать свою собственную утилиту для работы с последовательностями нуклеиновых кислот.
+
+Необходимо реализовать программу `dna_rna_tools.py`. Эта программа обязательно содержит функцию `run_dna_rna_tools`, а также любые другие функции которые вам понадобятся. Функция `run_dna_rna_tools` принимает на вход произвольное количество аргументов с последовательностями ДНК или РНК (*str*), а также название процедуры которую нужно выполнить (это всегда последний аргумент, *str*, см. пример использования). После этого она делает заданное действие над всеми переданными последовательностями и *возвращает* результат. 
+
+### Список процедур:
+
+- `is_nucleic_acid` - возвращает булевый результат проверки последовательности
+- `transcribe` — вернуть транскрибированную последовательность
+- `reverse` — вернуть развёрнутую последовательность
+- `complement` — вернуть комплементарную последовательность
+- `reverse_complement` — вернуть обратную комплементарную последовательность
+- любые дополнительные процедуры на ваш страх и риск (опционально)
+
+### Пример использования
+
+```python
+run_dna_rna_tools('TTUU', 'is_nucleic_acid') # False !!
+run_dna_rna_tools('ATG', 'transcribe') # 'AUG'
+run_dna_rna_tools('ATG', 'reverse') # 'GTA'
+run_dna_rna_tools('AtG', 'complement') # 'TaC'
+run_dna_rna_tools('ATg', 'reverse_complement') # 'cAT'
+run_dna_rna_tools('ATG', 'aT', 'reverse') # ['GTA', 'Ta']
 ```
 
-1. You are ready to go!
+### Требования к программе:
 
-**With uv:**
-```{bash}
-uv run python create_knowledge_graph.py
+- Программа должна принимать любое количество позиционых аргументов.
+- Программа должна сохранять регистр символов
+- Если подана одна последовательность - возвращается строка с результатом. Если подано несколько - возвращается список из строк. 
+- Программа должна работать **только** с последовательностями нуклеиновых кислот. К примеру, последовательность AUTGC не может существовать, так как содержит T и U, такие случаи нужно как-то отслеживать.
+- **НЕ ИСПОЛЬЗУЙТЕ** `input()`! От вас требуются только функции (только определение, не надо их вызывать)
+- Запрещается использование сторонних модулей.
+- Не пишите полотно кода в главной функции, структурируйте код, создавайте доп. функции под каждую конкретную задачу.
+
+Также вам надо будет показать, что вы проверили что стиль вашего кода соотвествует общепринятым стандартам. Для этого надо будет запустить специальную программу-проверщик (`flake8`, см. ниже) и приложить в репозиторий скриншот результата её проверки.
+
+## Code Quality
+
+С этого ДЗ ***качество кода*** будет влиять на оценку. Это в том числе именования переменных и функций, расстановка пробелов и отступов, проверки на `None` и `True/False` и многое другое. В питоне есть довольно хорошо прописанные правила хорошего тона, их даже несколько:
+
+- [PEP-8](https://peps.python.org/pep-0008/)  - это основной свод правил от самих разработчиков. Советую почитать оригинал или выжимки на русском (или какие-нибудь видосы глянуть).
+- Clean code ([habr](https://habr.com/ru/companies/otus/articles/682922/), [youtube](https://youtube.com/playlist?list=PLmqFxxywkatSQoLnnkh7-XjIcGdmo28aJ&si=VVHGq_pK2GgR3GY1)) - свод правил предложенный Бобом Мартином. Очень советую ссылку на ютуб с плейлистом от Сергея Немчинского
+- …
+
+Никакой свод правил является истиной в последней инстанции. Любая команда и компания могут устанавливать свои внутренние правила. Главное чтобы они были едины для всех членов команды. Но PEP-8 и Clean code  - это хорошие вещи которым можно стараться следовать если у вас нет ничего приоритетнее. При чем не только в Python! Например, в R как-таковых рекомендаций нет, поэтому можно стараться придерживаться питоновских.  
+
+Выучить всё сразу и за всем следить - нереально. На помощь вам придут программы которые автоматически следят за стилем кода - ***линтеры***. Их целый зоопарк, но я советую начать с этих двух:
+
+1. *Flake8* - самый простой и базовый проверщик стиля. 
+2. *Black* - современный и продвинутый исправлятор стиля.
+
+Ставятся и используются тоже очень просто:
+
+```bash
+pip install flake8 pep8-naming flake8-builtins flake8-functions-names flake8-variables-names # flake8 с доп. модулями
+pip install black
+
+flake8 your_script.py # печатает в терминал свои комменты
+black your_script.py # исправляет файлик (исправить может не всё, например он не будет менять имена переменных
 ```
 
-**With Poetry:**
-```{bash}
-poetry run python create_knowledge_graph.py
-```
+Если flake8 с доп. модулями ни на что не жалуется - значит вы отлично оформили свой код и штрафов за него не будет (хотя проверяющие всегда могут оставить свои личные советы по стилю). Некоторые ошибки которые подсвечивает flake8 - тоже совсем не критичные, и мы не будем обращать на них внимание. Вы всегда можете написать в чат и спросить, насколько критично то или иное замечание флейка. 
 
-## 🛠 Usage
 
-### Structure
-The project template is structured as follows:
-```
-.
-│  # Project setup
-│
-├── LICENSE
-├── README.md
-├── pyproject.toml
-│
-│  # Docker setup
-│
-├── Dockerfile
-├── docker
-│   ├── biocypher_entrypoint_patch.sh
-│   ├── create_table.sh
-│   └── import.sh
-├── docker-compose.yml
-├── docker-variables.env
-│
-│  # Project pipeline
-│
-├── create_knowledge_graph.py
-├── config
-│   ├── biocypher_config.yaml
-│   ├── biocypher_docker_config.yaml
-│   └── schema_config.yaml
-└── template_package
-    └── adapters
-        └── example_adapter.py
-```
+## Доолнительное задание
 
-The main components of the BioCypher pipeline are the
-`create_knowledge_graph.py`, the configuration in the `config` directory, and
-the adapter module in the `template_package` directory. The latter can be used
-to publish your own adapters (see below). You can also use other adapters from
-anywhere on GitHub, PyPI, or your local machine.
+Приложите в репозиторий `.txt`/`.png`/`.jpg` файл с анекдотом или мемом про любое из правил в [PEP-8](https://peps.python.org/pep-0008/). 
 
-**The BioCypher ecosystem relies on the collection of adapters (planned, in
-development, or already available) to inform the community about the available
-data sources and to facilitate the creation of knowledge graphs. If you think
-your adapter could be useful for others, please create an issue for it on the
-[main BioCypher repository](https://github.com/biocypher/biocypher/issues).**
+## Pазбалловка
 
-In addition, the docker setup is provided to run the pipeline (from the same
-python script) in a docker container, and subsequently load the knowledge graph
-into a Neo4j instance (also from a docker container). This is useful if you want
-to run the pipeline on a server, or if you want to run it in a reproducible
-environment.
+- За каждую из 5 процедур: **15 баллов**
+- За правильную работу `run_dna_rna_tools`: **20 баллов**
+- Скриншот успешного `flake8`: **5 баллов**
 
-### Running the pipeline
+- Анекдот или мем про любое из правил в PEP-8: **1 доп. балл**
 
-`python create_knowledge_graph.py` will create a knowledge graph from the
-example data included in this repository (borrowed from the [BioCypher
-tutorial](https://biocypher.org/BioCypher/learn/tutorials/tutorial001_basics/)).
-To do that, it uses the following components:
+## **Предполагаемый учебный результат**
 
-- `create_knowledge_graph.py`: the main script that orchestrates the pipeline.
-It brings together the BioCypher package with the data sources. To build a 
-knowledge graph, you need at least one adapter (see below). For common 
-resources, there may already be an adapter available in the BioCypher package or
-in a separate repository. You can also write your own adapter, should none be
-available for your data.
+Это задание позволит лучше разобраться с системой Git на практике, потреннироваться в написании собственных биоинформатических функций, а также лучше осознать такие вещи как распаковка, args и kwargs.
 
-- `example_adapter.py` (in `template_package.adapters`): a module that defines
-the adapter to the data source. In this case, it is a random generator script.
-If you want to create your own adapters, we recommend to use the example adapter
-as a blueprint and create one python file per data source, approproately named.
-You can then import the adapter in `create_knowledge_graph.py` and add it to
-the pipeline. This way, you ensure that others can easily install and use your 
-adapters.
+Удачи! ✨✨
 
-- `schema_config.yaml`: a configuration file (found in the `config` directory)
-that defines the schema of the knowledge graph. It is used by BioCypher to map
-the data source to the knowledge representation on the basis of ontology (see
-[this part of the BioCypher 
-tutorial](https://biocypher.org/BioCypher/learn/tutorials/tutorial002_handling_ontologies/)).
 
-- `biocypher_config.yaml`: a configuration file (found in the `config` 
-directory) that defines some BioCypher parameters, such as the mode, the 
-separators used, and other options. More on its use can be found in the
-[Documentation](https://biocypher.org/BioCypher/reference/biocypher-config/).
-
-### Publishing your own adapters
-
-After adding your adapter(s) to the `adapters` directory, you may want to
-publish them for easier reuse. To create a package to distribute your own
-adapter(s), we recommend using [uv](https://docs.astral.sh/uv/). uv,
-after setup, allows you to build and publish your package to PyPI using simple
-commands. To set up your package, rename the `template_package` directory to
-your desired package name and update the `pyproject.toml` file accordingly. Most
-importantly, update the `name`,`author`, and `version` fields. You can also add
-a `description` and a `license`.  Then, you can build and publish your package to PyPI
-using the following commands:
-
-```{bash}
-uv build
-uv publish
-```
-
-```{bash}
-poetry build
-poetry publish
-```
-
-If you don't want to publish your package to PyPI, you can also install it from
-GitHub using uv or pip.
-
-### Further reading / code
-
-If you want to see a second example of the workflow, check our
-[CollecTRI](https://github.com/biocypher/collectri) pipeline. Its README describes
-the process of data assessment and adapter creation in more detail.
-
-## 🐳 Docker
-
-This repo also contains a `docker compose` workflow to create the example
-database using BioCypher and load it into a dockerised Neo4j instance
-automatically. To run it, simply execute `docker compose up -d` in the root 
-directory of the project. This will start up a single (detached) docker
-container with a Neo4j instance that contains the knowledge graph built by
-BioCypher as the DB `neo4j` (the default DB), which you can connect to and
-browse at localhost:7474. Authentication is deactivated by default and can be
-modified in the `docker_variables.env` file (in which case you need to provide
-the .env file to the deploy stage of the `docker-compose.yml`).
-
-Regarding the BioCypher build procedure, the `biocypher_docker_config.yaml` file
-is used instead of the `biocypher_config.yaml` (configured in
-`scripts/build.sh`). Everything else is the same as in the local setup. The
-first container (`build`) installs and runs the BioCypher pipeline, the second
-container (`import`) installs Neo4j and runs the import, and the third container
-(`deploy`) deploys the Neo4j instance on localhost. The files are shared using a
-Docker Volume. This three-stage setup strictly is not necessary for the mounting
-of a read-write instance of Neo4j, but is required if the purpose is to provide
-a read-only instance (e.g. for a web app) that is updated regularly; for an
-example, see the [meta graph
-repository](https://github.com/biocypher/meta-graph). The read-only setting is
-configured in the `docker-compose.yml` file
-(`NEO4J_dbms_databases_default__to__read__only: "false"`) and is deactivated by
-default.
+*Что будет если игнорировать PEP-8:*
+![Что будет если игнорировать PEP-8](imgs/bonk.png)

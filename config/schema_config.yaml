@@ -1,21 +1,73 @@
-# add your desired knowledge graph components here
+# -------------------------
+# Nodes
+# -------------------------
+
+mgi gene:
+  represented_as: node
+  input_label: gene
+  is_a: gene
+  properties:
+    symbol: str
+
+ensembl gene:
+  represented_as: node
+  input_label: ensembl_gene
+  is_a: gene
+  properties:
+    symbol: str
+
+mp phenotype:
+  represented_as: node
+  input_label: phenotype
+  is_a: phenotypic feature
+  properties:
+    name: str
+
+tissue:
+  represented_as: node
+  input_label: tissue
+  is_a: anatomical entity
+  properties:
+    name: str
 
 protein:
-    represented_as: node
-    preferred_id: uniprot
-    input_label: uniprot_protein
+  represented_as: node
+  input_label: protein
+  is_a: protein
+  properties: {}
 
-disease:
-    represented_as: node
-    preferred_id: doid
-    input_label: do_disease
+# -------------------------
+# Edges
+# -------------------------
 
-protein interaction:
-    is_a: pairwise molecular interaction
-    represented_as: edge
-    input_label: protein_protein_interaction
+gene has phenotype:
+  represented_as: edge
+  input_label: gene_has_phenotype
+  is_a: association
+  source: mgi gene
+  target: mp phenotype
+  properties:
+    pmid: str
+    genotype_id: str
+    background: str
+    allelic_composition: str
+    allele_symbol: str
 
-protein to disease association:
-    is_a: association
-    represented_as: edge
-    input_label: protein_disease_association
+has expression:
+  represented_as: edge
+  input_label: has_expression
+  is_a: association
+  source: ensembl gene
+  target: tissue
+  properties:
+    tpm: float
+    experiment_id: str
+
+protein interacts with protein:
+  represented_as: edge
+  input_label: protein_interacts_with_protein
+  is_a: pairwise molecular interaction
+  source: protein
+  target: protein
+  properties:
+    combined_score: int

@@ -1,69 +1,61 @@
-from biocypher import BioCypher, FileDownload
-from template_package.adapters.example_adapter import (
-    ExampleAdapter,
-    ExampleAdapterNodeType,
-    ExampleAdapterEdgeType,
-    ExampleAdapterProteinField,
-    ExampleAdapterDiseaseField,
-)
+from __future__ import annotations
 
-# Instantiate the BioCypher interface
-# You can use `config/biocypher_config.yaml` to configure the framework or
-# supply settings via parameters below
-bc = BioCypher()
+from pathlib import Path
+from biocypher import BioCypher
 
-# Download and cache resources (change the directory in the options if needed)
-urls = "https://file-examples.com/wp-content/storage/2017/02/file_example_CSV_5000.csv"
-resource = FileDownload(
-    name="Example resource",  # Name of the resource
-    url_s=urls,  # URL to the resource(s)
-    lifetime=7,  # seven days cache lifetime
-)
-paths = bc.download(resource)  # Downloads to '.cache' by default
-print(paths)
-# You can use the list of paths returned to read the resource into your adapter
-
-# Choose node types to include in the knowledge graph.
-# These are defined in the adapter (`adapter.py`).
-node_types = [
-    ExampleAdapterNodeType.PROTEIN,
-    ExampleAdapterNodeType.DISEASE,
-]
-
-# Choose protein adapter fields to include in the knowledge graph.
-# These are defined in the adapter (`adapter.py`).
-node_fields = [
-    # Proteins
-    ExampleAdapterProteinField.ID,
-    ExampleAdapterProteinField.SEQUENCE,
-    ExampleAdapterProteinField.DESCRIPTION,
-    ExampleAdapterProteinField.TAXON,
-    # Diseases
-    ExampleAdapterDiseaseField.ID,
-    ExampleAdapterDiseaseField.NAME,
-    ExampleAdapterDiseaseField.DESCRIPTION,
-]
-
-edge_types = [
-    ExampleAdapterEdgeType.PROTEIN_PROTEIN_INTERACTION,
-    ExampleAdapterEdgeType.PROTEIN_DISEASE_ASSOCIATION,
-]
-
-# Create a protein adapter instance
-adapter = ExampleAdapter(
-    node_types=node_types,
-    node_fields=node_fields,
-    edge_types=edge_types,
-    # we can leave edge fields empty, defaulting to all fields in the adapter
-)
+from template_package.adapters.mgi_phenogenomp_adapter import MgiGeneMpAdapter
+from template_package.adapters.expression_atlas_adapter import ExpressionAtlasAdapter
+from template_package.adapters.string_ppi_adapter import StringPpiAdapter
 
 
-# Create a knowledge graph from the adapter
-bc.write_nodes(adapter.get_nodes())
-bc.write_edges(adapter.get_edges())
+def main() -> None:
+    bc = BioCypher()
 
-# Write admin import statement
-bc.write_import_call()
+    # -- 1. Genotype-Phenotype (MGI) -----------------------------------
+    pheno_adapter = MgiGeneMpAdapter(
+        path=Path("data/MGI_PhenoGenoMP.rpt"),
+    )
+    bc.write_nodes(pheno_adapter.iter_nodes())
+    bc.write_edges(pheno_adapter.iter_edges())
 
-# Print summary
-bc.summary()
+    # -- 2. Gene Expression (Expression Atlas, numeric TPM) ------------
+    tpm_path = Path("data/E-GEOD-74747-tpms.tsv")
+    sdrf_path = Path("data/E-GEOD-74747.condensed-sdrf.tsv")
+
+    if tpm_path.exists() and sdrf_path.exists():
+        expr_adapter = ExpressionAtlasAdapter(
+            tpm_path=tpm_path,
+            sdrf_path=sdrf_path,
+            experiment_id="E-GEOD-74747",
+            tpm_cutoff=0.5,
+        )
+        bc.write_nodes(expr_adapter.iter_nodes())
+        bc.write_edges(expr_adapter.iter_edges())
+    else:
+        print("Warning: Expression Atlas files not found in data/.")
+        print("  Expected: data/E-GEOD-74747-tpms.tsv")
+        print("           data/E-GEOD-74747.condensed-sdrf.tsv")
+
+    # -- 3. Protein-Protein Interactions (STRING) ----------------------
+    string_path = Path("data/10090.protein.links.v12.0.txt.gz")
+    if not string_path.exists():
+        string_path = Path("data/10090.protein.links.v12.0.txt")
+
+    if string_path.exists():
+        ppi_adapter = StringPpiAdapter(
+            path=string_path,
+            score_threshold=400,
+        )
+        bc.write_nodes(ppi_adapter.iter_nodes())
+        bc.write_edges(ppi_adapter.iter_edges())
+    else:
+        print("Warning: STRING data not found. Run:")
+        print("  python scripts/download_string.py")
+
+    # -- finalise ------------------------------------------------------
+    bc.write_import_call()
+    bc.summary()
+
+
+if __name__ == "__main__":
+    main()
