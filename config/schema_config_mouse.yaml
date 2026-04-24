@@ -1,0 +1,122 @@
+# schema_config_mouse.yaml
+# BioCypher schema for the MOUSE gene-phenotype knowledge graph.
+#
+# Mouse genes are identified by MGI ID (e.g. MGI:97490) — stable across
+# symbol renames. Gene symbol is stored as a property for readability.
+#
+# Phenotypic features: MP top-level terms (shared with human graph for
+# cross-species comparison via node ID overlap).
+#
+# Tissue nodes carry UBERON IDs enabling cross-species expression comparison.
+#
+# Ontological backbone: Biolink Model v3.2.1
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  Nodes
+# ═══════════════════════════════════════════════════════════════════
+
+mouse gene:
+  represented_as: node
+  preferred_id: mgi             # MGI:xxxxxxx — stable, species-specific
+  label_in_input: mouse gene
+  is_a: gene
+  properties:
+    mgi_id: str
+    symbol: str                 # e.g. Trp53  (stored for readability)
+    ensembl_id: str
+    organism: str               # always "Mus musculus"
+
+# Shared with human graph — same node IDs (MP:xxxxxxx) in both graphs
+# enable direct cross-species phenotype comparison in Neo4j.
+mp top term:
+  represented_as: node
+  preferred_id: mp
+  label_in_input: mp top term
+  is_a: phenotypic feature
+  properties:
+    mp_id: str
+    name: str
+
+go term:
+  represented_as: node
+  preferred_id: go
+  label_in_input: go term
+  is_a: ontology class
+  properties:
+    go_id: str
+    namespace: str
+    name: str
+
+# Tissue nodes use UBERON IDs so that mouse and human expression data
+# can be compared on the same tissue nodes in a merged graph.
+tissue:
+  represented_as: node
+  preferred_id: uberon
+  label_in_input: tissue
+  is_a: gross anatomical structure
+  properties:
+    uberon_id: str
+    name: str
+    gxd_name: str
+
+protein:
+  represented_as: node
+  preferred_id: uniprot
+  label_in_input: protein
+  is_a: polypeptide
+  properties:
+    uniprot_id: str
+    mgi_id: str
+    symbol: str
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  Edges
+# ═══════════════════════════════════════════════════════════════════
+
+# ── Layer 1: Phenotype (MGI) ────────────────────────────────────── #
+
+mouse gene has mp top term:
+  represented_as: edge
+  label_in_input: mouse gene has mp top term
+  is_a: gene to phenotypic feature association
+  source: mouse gene
+  target: mp top term
+
+# ── Layer 2: Gene Ontology (NCBI gene2go) ───────────────────────── #
+
+mouse gene has go term:
+  represented_as: edge
+  label_in_input: mouse gene has go term
+  is_a: association
+  source: mouse gene
+  target: go term
+  properties:
+    evidence_codes: str[]
+    aspect: str                 # P / F / C  (biological process / molecular function / cellular component)
+
+# ── Layer 3: Expression (GXD / MGI RNA-seq) ─────────────────────── #
+
+mouse gene expressed in tissue:
+  represented_as: edge
+  label_in_input: mouse gene expressed in
+  is_a: gene expression mixin
+  source: mouse gene
+  target: tissue
+  properties:
+    median_avg_tpm: float
+    tpm_level: str
+    n_experiments: int
+
+protein interacts with:
+  represented_as: edge
+  label_in_input: protein interacts with
+  is_a: pairwise molecular interaction
+  source: protein
+  target: protein
+  properties:
+    confidence_score: float
+    detection_method: str
+    source_db: str
+    pubmed_ids: str[]
