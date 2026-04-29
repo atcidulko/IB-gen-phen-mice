@@ -1,114 +1,108 @@
-# Mouse Gene Knowledge Graph
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/gNj7_8fL)
+# HW 3. Functions 
 
-A knowledge graph for mouse (*Mus musculus*) gene biology, built with [BioCypher](https://biocypher.org/).  
-Designed to support gene–phenotype link prediction using graph-based machine learning.
 
-Mirrors the architecture of [@TonyGoncharov/phenotype_prediction_project](https://github.com/TonyGoncharov/phenotype_prediction_project) (human graph), extended with expression and protein interaction layers.
+### 1. Как получить ДЗ
 
----
+С этого момента мы начнем работать через систему GitHub Classrom. Она удобна тем что там автоматизированы некоторые вещи для учебы.
 
-## Graph structure
+1) Примите задание по ссылке
+2) Для вас будет создан ваш индивидуальный приватный репозиторий. 
+3) Склонируйте его (`git clone`) и работайте локально.
 
-| Node | ID | Count |
-|---|---|---|
-| `MouseGene` | MGI ID | 47 757 |
-| `Tissue` | UBERON ID | 90 |
-| `Protein` | BioGRID ID | 18 904 |
+❗️❗️ Тут **НЕ НУЖНО** создавать новых веток, бот GitHub Classrom сам со всем разберется
 
-| Edge | Source | Count |
-|---|---|---|
-| `EXPRESSED_IN` | GXD / MGI RNA-seq | ~2 028 736 |
-| `INTERACTS_WITH` | BioGRID v5.0 | 95 022 |
+Просто склонируйте репозиторий и сразу пишите в нем код.
 
----
+### 2. Как сдать ДЗ
 
-## Data sources
+1) Сперва проверьте что вы всё сделали как хотели
+2) Потом просто сделайте `git push` и всё:). Бот сам создает pull-request, в котором вы сможете найти фидбек преподавателя
 
-| Layer | Source | Notes |
-|---|---|---|
-| Expression | [GXD / MGI](https://www.informatics.jax.org/downloads/reports/gxdrnaseq/) | 96 RNA-seq experiments, median TPM per gene × tissue |
-| Tissue ontology | [UBERON](https://obofoundry.org/ontology/uberon.html) | mapped from GXD anatomical terms |
-| PPI | [BioGRID](https://thebiogrid.org/) v5.0.256, TAB3 | physical interactions only |
+## Основное задание
 
----
+В качестве данного ДЗ вам будет необходимо написать свою собственную утилиту для работы с последовательностями нуклеиновых кислот.
 
-## Expression data pipeline
+Необходимо реализовать программу `dna_rna_tools.py`. Эта программа обязательно содержит функцию `run_dna_rna_tools`, а также любые другие функции которые вам понадобятся. Функция `run_dna_rna_tools` принимает на вход произвольное количество аргументов с последовательностями ДНК или РНК (*str*), а также название процедуры которую нужно выполнить (это всегда последний аргумент, *str*, см. пример использования). После этого она делает заданное действие над всеми переданными последовательностями и *возвращает* результат. 
 
-Raw RNA-seq data was taken from the GXD RNA-seq download folder (`/gxdrnaseq/`), which contains experiments curated and pre-processed by MGI from EMBL-EBI Expression Atlas. GXD applies controlled biological source metadata and quantile normalisation across biological replicates within each experiment, producing `avg_qnTPM` values per gene per sample set.
+### Список процедур:
 
-For this graph we used `avg_TPM` (column 17) — the average TPM across technical replicates within a sample — as the base value, and aggregated across experiments as follows:
+- `is_nucleic_acid` - возвращает булевый результат проверки последовательности
+- `transcribe` — вернуть транскрибированную последовательность
+- `reverse` — вернуть развёрнутую последовательность
+- `complement` — вернуть комплементарную последовательность
+- `reverse_complement` — вернуть обратную комплементарную последовательность
+- любые дополнительные процедуры на ваш страх и риск (опционально)
 
-1. **Download** — all 96 `.rpt.gz` files from the GXD RNA-seq folder (`scripts/gxd_download_aggregate.py`)
-2. **Filter** — keep only rows where `Detected = Yes` and no mutant allele is present (wild-type only)
-3. **Aggregate** — group by `(MGI Gene ID, Anatomical Structure)` across all experiments, compute **median `avg_TPM`**
-4. **Level assignment** — assign expression level label based on median TPM:
+### Пример использования
 
-   | Level | TPM range |
-   |---|---|
-   | Absent | 0 – 0.5 |
-   | Low | 0.5 – 10 |
-   | Medium | 10 – 100 |
-   | High | > 100 |
-
-5. **Tissue mapping** — GXD anatomical structure names mapped to UBERON IDs via OLS API + manual curation for 91 tissues (`scripts/make_uberon_mapping.py`)
-
-Result: **2 043 209** unique gene × tissue pairs from **47 757** genes across **91** tissues.
-
----
-
-## Project structure
-
-```
-├── config/
-│   ├── biocypher_config.yaml
-│   └── schema_config_mouse.yaml
-├── data/                          # input files (not in git)
-│   ├── gene_expression_summary.tsv
-│   ├── gxd_uberon_mapping.tsv
-│   └── biogrid_mouse_ppi.tsv
-├── src/
-│   ├── build_graph.py
-│   └── adapters/
-│       ├── base.py
-│       ├── expression_adapter.py
-│       └── ppi_adapter.py
-└── scripts/
-    ├── gxd_download_aggregate.py  # download GXD files → gene_expression_summary.tsv
-    └── make_uberon_mapping.py     # GXD tissue names → UBERON IDs
+```python
+run_dna_rna_tools('TTUU', 'is_nucleic_acid') # False !!
+run_dna_rna_tools('ATG', 'transcribe') # 'AUG'
+run_dna_rna_tools('ATG', 'reverse') # 'GTA'
+run_dna_rna_tools('AtG', 'complement') # 'TaC'
+run_dna_rna_tools('ATg', 'reverse_complement') # 'cAT'
+run_dna_rna_tools('ATG', 'aT', 'reverse') # ['GTA', 'Ta']
 ```
 
----
+### Требования к программе:
 
-## Quickstart
+- Программа должна принимать любое количество позиционых аргументов.
+- Программа должна сохранять регистр символов
+- Если подана одна последовательность - возвращается строка с результатом. Если подано несколько - возвращается список из строк. 
+- Программа должна работать **только** с последовательностями нуклеиновых кислот. К примеру, последовательность AUTGC не может существовать, так как содержит T и U, такие случаи нужно как-то отслеживать.
+- **НЕ ИСПОЛЬЗУЙТЕ** `input()`! От вас требуются только функции (только определение, не надо их вызывать)
+- Запрещается использование сторонних модулей.
+- Не пишите полотно кода в главной функции, структурируйте код, создавайте доп. функции под каждую конкретную задачу.
+
+Также вам надо будет показать, что вы проверили что стиль вашего кода соотвествует общепринятым стандартам. Для этого надо будет запустить специальную программу-проверщик (`flake8`, см. ниже) и приложить в репозиторий скриншот результата её проверки.
+
+## Code Quality
+
+С этого ДЗ ***качество кода*** будет влиять на оценку. Это в том числе именования переменных и функций, расстановка пробелов и отступов, проверки на `None` и `True/False` и многое другое. В питоне есть довольно хорошо прописанные правила хорошего тона, их даже несколько:
+
+- [PEP-8](https://peps.python.org/pep-0008/)  - это основной свод правил от самих разработчиков. Советую почитать оригинал или выжимки на русском (или какие-нибудь видосы глянуть).
+- Clean code ([habr](https://habr.com/ru/companies/otus/articles/682922/), [youtube](https://youtube.com/playlist?list=PLmqFxxywkatSQoLnnkh7-XjIcGdmo28aJ&si=VVHGq_pK2GgR3GY1)) - свод правил предложенный Бобом Мартином. Очень советую ссылку на ютуб с плейлистом от Сергея Немчинского
+- …
+
+Никакой свод правил является истиной в последней инстанции. Любая команда и компания могут устанавливать свои внутренние правила. Главное чтобы они были едины для всех членов команды. Но PEP-8 и Clean code  - это хорошие вещи которым можно стараться следовать если у вас нет ничего приоритетнее. При чем не только в Python! Например, в R как-таковых рекомендаций нет, поэтому можно стараться придерживаться питоновских.  
+
+Выучить всё сразу и за всем следить - нереально. На помощь вам придут программы которые автоматически следят за стилем кода - ***линтеры***. Их целый зоопарк, но я советую начать с этих двух:
+
+1. *Flake8* - самый простой и базовый проверщик стиля. 
+2. *Black* - современный и продвинутый исправлятор стиля.
+
+Ставятся и используются тоже очень просто:
 
 ```bash
-# 1. install dependencies
-pip install biocypher pandas requests beautifulsoup4
+pip install flake8 pep8-naming flake8-builtins flake8-functions-names flake8-variables-names # flake8 с доп. модулями
+pip install black
 
-# 2. download and aggregate GXD expression data (~96 experiments)
-python scripts/gxd_download_aggregate.py
-# → data/gene_expression_summary.tsv
-
-# 3. map tissue names to UBERON IDs
-python scripts/make_uberon_mapping.py
-# → data/gxd_uberon_mapping.tsv
-
-# 4. download BioGRID mouse PPI
-#    https://downloads.thebiogrid.org/BioGRID/Latest-Release/
-#    unzip BIOGRID-ORGANISM-LATEST.tab3.zip → rename to data/biogrid_mouse_ppi.tsv
-
-# 5. build graph
-python src/build_graph.py
-# → biocypher_out/mouse/
-
-# 6. import into Neo4j
-bash biocypher_out/mouse/neo4j-admin-import-call.sh
+flake8 your_script.py # печатает в терминал свои комменты
+black your_script.py # исправляет файлик (исправить может не всё, например он не будет менять имена переменных
 ```
 
----
+Если flake8 с доп. модулями ни на что не жалуется - значит вы отлично оформили свой код и штрафов за него не будет (хотя проверяющие всегда могут оставить свои личные советы по стилю). Некоторые ошибки которые подсвечивает flake8 - тоже совсем не критичные, и мы не будем обращать на них внимание. Вы всегда можете написать в чат и спросить, насколько критично то или иное замечание флейка. 
 
-## Planned
 
-- Phenotype layer: `MouseGene` → `MpTopTerm` (MGI genotype–phenotype annotations)
-- GO layer: `MouseGene` → `GoTerm`
-- Gene–phenotype link prediction (PyKEEN / GNN)
+## Доолнительное задание
+
+Приложите в репозиторий `.txt`/`.png`/`.jpg` файл с анекдотом или мемом про любое из правил в [PEP-8](https://peps.python.org/pep-0008/). 
+
+## Pазбалловка
+
+- За каждую из 5 процедур: **15 баллов**
+- За правильную работу `run_dna_rna_tools`: **20 баллов**
+- Скриншот успешного `flake8`: **5 баллов**
+
+- Анекдот или мем про любое из правил в PEP-8: **1 доп. балл**
+
+## **Предполагаемый учебный результат**
+
+Это задание позволит лучше разобраться с системой Git на практике, потреннироваться в написании собственных биоинформатических функций, а также лучше осознать такие вещи как распаковка, args и kwargs.
+
+Удачи! ✨✨
+
+
+*Что будет если игнорировать PEP-8:*
+![Что будет если игнорировать PEP-8](imgs/bonk.png)
