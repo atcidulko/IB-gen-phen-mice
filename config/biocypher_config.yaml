@@ -1,0 +1,4 @@
+biocypher:
+  schema_config_path: config/schema_config_mouse.yaml
+  output_directory: biocypher_out/mouse
+  strict_mode: false

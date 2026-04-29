@@ -24,20 +24,15 @@ from biocypher import BioCypher
 
 from adapters.expression_adapter import MouseExpressionAdapter
 from adapters.ppi_adapter import MousePPIAdapter
+from adapters.phenotype_adapter import MousePhenotypeAdapter
 
 # ── регистрация всех слоёв ────────────────────────────────────────────────────
-# Добавляйте новые адаптеры сюда — build_graph подхватит автоматически.
 
 LAYERS: dict[str, type] = {
+    "phenotype":  MousePhenotypeAdapter,
     "expression": MouseExpressionAdapter,
     "ppi":        MousePPIAdapter,
 }
-
-# Слои которые ещё не реализованы — раскомментируйте когда будут готовы:
-# from adapters.phenotype_adapter import MousePhenotypeAdapter
-# from adapters.go_adapter import MouseGoAdapter
-# LAYERS["phenotype"] = MousePhenotypeAdapter
-# LAYERS["go"]        = MouseGoAdapter
 
 
 # ── аргументы CLI ─────────────────────────────────────────────────────────────
@@ -111,7 +106,7 @@ def main() -> None:
 
     # финализируем — генерируем скрипт импорта для Neo4j
     bc.write_import_call()
-    bc.summary()
+    pass  # bc.summary() removed
 
     print(f"\nГотово. Файлы для Neo4j: {graph_out}/")
     print(f"Импорт: bash {graph_out}/neo4j-admin-import-call.sh")
