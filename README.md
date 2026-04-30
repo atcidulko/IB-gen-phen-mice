@@ -1,108 +1,86 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/gNj7_8fL)
-# HW 3. Functions 
+# Mouse Gene Knowledge Graph
 
+Pipeline for building a mouse gene–phenotype–expression–PPI knowledge graph
+using [BioCypher](https://biocypher.org/), mirroring the architecture of
+[TonyGoncharov/phenotype_prediction_project](https://github.com/TonyGoncharov/phenotype_prediction_project)
+but extended with expression and PPI layers, and using MGI IDs as primary
+gene identifiers.
 
-### 1. Как получить ДЗ
+## Graph structure
 
-С этого момента мы начнем работать через систему GitHub Classrom. Она удобна тем что там автоматизированы некоторые вещи для учебы.
-
-1) Примите задание по ссылке
-2) Для вас будет создан ваш индивидуальный приватный репозиторий. 
-3) Склонируйте его (`git clone`) и работайте локально.
-
-❗️❗️ Тут **НЕ НУЖНО** создавать новых веток, бот GitHub Classrom сам со всем разберется
-
-Просто склонируйте репозиторий и сразу пишите в нем код.
-
-### 2. Как сдать ДЗ
-
-1) Сперва проверьте что вы всё сделали как хотели
-2) Потом просто сделайте `git push` и всё:). Бот сам создает pull-request, в котором вы сможете найти фидбек преподавателя
-
-## Основное задание
-
-В качестве данного ДЗ вам будет необходимо написать свою собственную утилиту для работы с последовательностями нуклеиновых кислот.
-
-Необходимо реализовать программу `dna_rna_tools.py`. Эта программа обязательно содержит функцию `run_dna_rna_tools`, а также любые другие функции которые вам понадобятся. Функция `run_dna_rna_tools` принимает на вход произвольное количество аргументов с последовательностями ДНК или РНК (*str*), а также название процедуры которую нужно выполнить (это всегда последний аргумент, *str*, см. пример использования). После этого она делает заданное действие над всеми переданными последовательностями и *возвращает* результат. 
-
-### Список процедур:
-
-- `is_nucleic_acid` - возвращает булевый результат проверки последовательности
-- `transcribe` — вернуть транскрибированную последовательность
-- `reverse` — вернуть развёрнутую последовательность
-- `complement` — вернуть комплементарную последовательность
-- `reverse_complement` — вернуть обратную комплементарную последовательность
-- любые дополнительные процедуры на ваш страх и риск (опционально)
-
-### Пример использования
-
-```python
-run_dna_rna_tools('TTUU', 'is_nucleic_acid') # False !!
-run_dna_rna_tools('ATG', 'transcribe') # 'AUG'
-run_dna_rna_tools('ATG', 'reverse') # 'GTA'
-run_dna_rna_tools('AtG', 'complement') # 'TaC'
-run_dna_rna_tools('ATg', 'reverse_complement') # 'cAT'
-run_dna_rna_tools('ATG', 'aT', 'reverse') # ['GTA', 'Ta']
+```
+[MouseGene]  ──(has_mp_top_term)──▶  [MpTopTerm]   # phenotype
+[MouseGene]  ──(has_go_term)───────▶  [GoTerm]      # function
+[MouseGene]  ──(expressed_in)──────▶  [Tissue]      # expression (GXD)
+[Protein]    ──(interacts_with)────▶  [Protein]     # PPI (BioGRID)
 ```
 
-### Требования к программе:
+Tissue nodes carry UBERON IDs — enabling cross-species expression
+comparison with a human graph sharing the same tissue node IDs.
 
-- Программа должна принимать любое количество позиционых аргументов.
-- Программа должна сохранять регистр символов
-- Если подана одна последовательность - возвращается строка с результатом. Если подано несколько - возвращается список из строк. 
-- Программа должна работать **только** с последовательностями нуклеиновых кислот. К примеру, последовательность AUTGC не может существовать, так как содержит T и U, такие случаи нужно как-то отслеживать.
-- **НЕ ИСПОЛЬЗУЙТЕ** `input()`! От вас требуются только функции (только определение, не надо их вызывать)
-- Запрещается использование сторонних модулей.
-- Не пишите полотно кода в главной функции, структурируйте код, создавайте доп. функции под каждую конкретную задачу.
+MouseGene nodes use `MGI:xxxxxxx` as primary ID (stable across symbol
+renames); gene symbol is stored as a property.
 
-Также вам надо будет показать, что вы проверили что стиль вашего кода соотвествует общепринятым стандартам. Для этого надо будет запустить специальную программу-проверщик (`flake8`, см. ниже) и приложить в репозиторий скриншот результата её проверки.
+## Data sources
 
-## Code Quality
+| File | Source | Description |
+|---|---|---|
+| `MGI_PhenoGenoMP.rpt` | [MGI](https://www.informatics.jax.org/) | Mouse genotype → MP annotations |
+| `mp.obo` | [OBO Foundry](https://purl.obolibrary.org/obo/mp.obo) | Mammalian Phenotype Ontology |
+| `go-basic.obo` | [Gene Ontology](https://purl.obolibrary.org/obo/go/go-basic.obo) | Gene Ontology |
+| `gene2go.gz` | [NCBI](https://ftp.ncbi.nlm.nih.gov/gene/DATA/) | Gene → GO term mappings |
+| `gene_info.gz` | [NCBI](https://ftp.ncbi.nlm.nih.gov/gene/DATA/) | Gene symbols and MGI cross-refs |
+| `gene_expression_summary.tsv` | [GXD/MGI](https://www.informatics.jax.org/downloads/reports/gxdrnaseq/) | Aggregated RNA-seq (produced by `scripts/gxd_download_aggregate.py`) |
+| `gxd_uberon_mapping.tsv` | manual + OLS | GXD tissue name → UBERON ID |
+| `biogrid_mouse_ppi.tsv` | [BioGRID](https://thebiogrid.org/download.php) | Mouse PPI (TAB3 format) |
 
-С этого ДЗ ***качество кода*** будет влиять на оценку. Это в том числе именования переменных и функций, расстановка пробелов и отступов, проверки на `None` и `True/False` и многое другое. В питоне есть довольно хорошо прописанные правила хорошего тона, их даже несколько:
+## Project structure
 
-- [PEP-8](https://peps.python.org/pep-0008/)  - это основной свод правил от самих разработчиков. Советую почитать оригинал или выжимки на русском (или какие-нибудь видосы глянуть).
-- Clean code ([habr](https://habr.com/ru/companies/otus/articles/682922/), [youtube](https://youtube.com/playlist?list=PLmqFxxywkatSQoLnnkh7-XjIcGdmo28aJ&si=VVHGq_pK2GgR3GY1)) - свод правил предложенный Бобом Мартином. Очень советую ссылку на ютуб с плейлистом от Сергея Немчинского
-- …
+```
+├── config/
+│   └── schema_config_mouse.yaml   # BioCypher schema (nodes + edges)
+├── src/
+│   ├── adapters/
+│   │   ├── base.py                # BaseAdapter — shared I/O + dedup
+│   │   ├── expression_adapter.py  # Layer 3: GXD expression
+│   │   └── ppi_adapter.py         # Layer 4: BioGRID PPI
+│   └── layers/
+│       ├── expression_export.py   # raw GXD → gene_expression_summary.tsv
+│       └── ppi_export.py          # BioGRID download + filter → TSV
+├── scripts/
+│   ├── gxd_download_aggregate.py  # download all GXD files, compute median TPM
+│   └── make_uberon_mapping.py     # map GXD tissue names → UBERON IDs
+├── data/                          # input files (not in git)
+└── biocypher_out/
+    └── mouse/                     # Neo4j-ready CSVs + import script
+```
 
-Никакой свод правил является истиной в последней инстанции. Любая команда и компания могут устанавливать свои внутренние правила. Главное чтобы они были едины для всех членов команды. Но PEP-8 и Clean code  - это хорошие вещи которым можно стараться следовать если у вас нет ничего приоритетнее. При чем не только в Python! Например, в R как-таковых рекомендаций нет, поэтому можно стараться придерживаться питоновских.  
-
-Выучить всё сразу и за всем следить - нереально. На помощь вам придут программы которые автоматически следят за стилем кода - ***линтеры***. Их целый зоопарк, но я советую начать с этих двух:
-
-1. *Flake8* - самый простой и базовый проверщик стиля. 
-2. *Black* - современный и продвинутый исправлятор стиля.
-
-Ставятся и используются тоже очень просто:
+## Quickstart
 
 ```bash
-pip install flake8 pep8-naming flake8-builtins flake8-functions-names flake8-variables-names # flake8 с доп. модулями
-pip install black
+# 1. install
+pip install biocypher pandas requests beautifulsoup4
 
-flake8 your_script.py # печатает в терминал свои комменты
-black your_script.py # исправляет файлик (исправить может не всё, например он не будет менять имена переменных
+# 2. download GXD expression data
+python scripts/gxd_download_aggregate.py
+# → produces data/gene_expression_summary.tsv
+
+# 3. download BioGRID mouse PPI
+#    go to https://thebiogrid.org/download.php
+#    download BIOGRID-ORGANISM-Mus_musculus-*.tab3.zip
+#    unzip and copy to data/biogrid_mouse_ppi.tsv
+
+# 4. build UBERON mapping for 91 GXD tissues
+python scripts/make_uberon_mapping.py
+# → produces data/gxd_uberon_mapping.tsv
+
+# 5. build graph
+python run.py
 ```
 
-Если flake8 с доп. модулями ни на что не жалуется - значит вы отлично оформили свой код и штрафов за него не будет (хотя проверяющие всегда могут оставить свои личные советы по стилю). Некоторые ошибки которые подсвечивает flake8 - тоже совсем не критичные, и мы не будем обращать на них внимание. Вы всегда можете написать в чат и спросить, насколько критично то или иное замечание флейка. 
+## Adding a new layer
 
-
-## Доолнительное задание
-
-Приложите в репозиторий `.txt`/`.png`/`.jpg` файл с анекдотом или мемом про любое из правил в [PEP-8](https://peps.python.org/pep-0008/). 
-
-## Pазбалловка
-
-- За каждую из 5 процедур: **15 баллов**
-- За правильную работу `run_dna_rna_tools`: **20 баллов**
-- Скриншот успешного `flake8`: **5 баллов**
-
-- Анекдот или мем про любое из правил в PEP-8: **1 доп. балл**
-
-## **Предполагаемый учебный результат**
-
-Это задание позволит лучше разобраться с системой Git на практике, потреннироваться в написании собственных биоинформатических функций, а также лучше осознать такие вещи как распаковка, args и kwargs.
-
-Удачи! ✨✨
-
-
-*Что будет если игнорировать PEP-8:*
-![Что будет если игнорировать PEP-8](imgs/bonk.png)
+1. **Adapter** — `src/adapters/<name>_adapter.py`, inherit `BaseAdapter`, set `layer_name`
+2. **Export** — `src/layers/<name>_export.py`, raw data → TSV in `data/`
+3. **Registration** — add to `SPECIES_LAYERS` in `src/build_graph.py`
+4. **Schema** — add nodes/edges to `config/schema_config_mouse.yaml`
