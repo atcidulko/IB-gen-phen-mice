@@ -4,10 +4,8 @@
 # Mouse genes are identified by MGI ID (e.g. MGI:97490) — stable across
 # symbol renames. Gene symbol is stored as a property for readability.
 #
-# Phenotypic features: MP top-level terms (shared with human graph for
-# cross-species comparison via node ID overlap).
-#
 # Tissue nodes carry UBERON IDs enabling cross-species expression comparison.
+# Protein nodes are linked to genes via encodes edges (MGI → BioGRID).
 #
 # Ontological backbone: Biolink Model v3.2.1
 
@@ -18,17 +16,15 @@
 
 mouse gene:
   represented_as: node
-  preferred_id: mgi             # MGI:xxxxxxx — stable, species-specific
+  preferred_id: mgi
   label_in_input: mouse gene
   is_a: gene
   properties:
     mgi_id: str
-    symbol: str                 # e.g. Trp53  (stored for readability)
+    symbol: str
     ensembl_id: str
-    organism: str               # always "Mus musculus"
+    organism: str
 
-# Shared with human graph — same node IDs (MP:xxxxxxx) in both graphs
-# enable direct cross-species phenotype comparison in Neo4j.
 mp top term:
   represented_as: node
   preferred_id: mp
@@ -37,7 +33,7 @@ mp top term:
   properties:
     mp_id: str
     name: str
-
+    
 go term:
   represented_as: node
   preferred_id: go
@@ -45,11 +41,9 @@ go term:
   is_a: ontology class
   properties:
     go_id: str
-    namespace: str
     name: str
+    namespace: str
 
-# Tissue nodes use UBERON IDs so that mouse and human expression data
-# can be compared on the same tissue nodes in a merged graph.
 tissue:
   represented_as: node
   preferred_id: uberon
@@ -83,9 +77,8 @@ mouse gene has mp top term:
   is_a: gene to phenotypic feature association
   source: mouse gene
   target: mp top term
-
-# ── Layer 2: Gene Ontology (NCBI gene2go) ───────────────────────── #
-
+  
+# ── Layer 2: GO ────────────────────────────────────── #
 mouse gene has go term:
   represented_as: edge
   label_in_input: mouse gene has go term
@@ -94,7 +87,7 @@ mouse gene has go term:
   target: go term
   properties:
     evidence_codes: str[]
-    aspect: str                 # P / F / C  (biological process / molecular function / cellular component)
+    aspect: str
 
 # ── Layer 3: Expression (GXD / MGI RNA-seq) ─────────────────────── #
 
@@ -108,6 +101,17 @@ mouse gene expressed in tissue:
     median_avg_tpm: float
     tpm_level: str
     n_experiments: int
+
+# ── Layer 4: Gene → Protein (encodes) ───────────────────────────── #
+
+mouse gene encodes protein:
+  represented_as: edge
+  label_in_input: encodes
+  is_a: gene to gene product relationship
+  source: mouse gene
+  target: protein
+
+# ── Layer 5: Protein–Protein Interactions (BioGRID) ─────────────── #
 
 protein interacts with:
   represented_as: edge
