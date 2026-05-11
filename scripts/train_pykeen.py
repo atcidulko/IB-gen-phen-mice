@@ -24,8 +24,8 @@ TRIPLES_FILE  = Path("data/triples.tsv")
 OUT_DIR       = Path("models/pykeen")
 RESULTS_DIR   = Path("results")
 
-MODEL         = "TransE"    # TransE / RotatE / DistMult / ComplEx
-EPOCHS        = 200
+MODEL         = "DistMult"    # TransE / RotatE / DistMult / ComplEx
+EPOCHS        = 30
 EMBEDDING_DIM = 128
 BATCH_SIZE    = 1024        # увеличьте если есть GPU и много RAM
 

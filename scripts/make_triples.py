@@ -7,7 +7,7 @@ scripts/make_triples.py
     python scripts/make_triples.py
 
 Результат:
-    data/triples.tsv  — три колонки: head, relation, tail
+    data/triples.tsv
 """
 
 import pandas as pd
@@ -49,6 +49,26 @@ def load_edges() -> pd.DataFrame:
             "tail":     df[6],
         }))
         print(f"  {path.name}: {len(df):,} PPI рёбер")
+
+    # 4. MouseGene → GoTerm
+    for path in sorted(GRAPH_DIR.glob("MouseGeneHasGoTerm-part*.csv")):
+        df = pd.read_csv(path, sep=";", dtype=str, header=None)
+        parts.append(pd.DataFrame({
+            "head":     df[0],
+            "relation": "has_go_term",
+            "tail":     df[4],
+        }))
+        print(f"  {path.name}: {len(df):,} рёбер GO")
+
+    # 5. MouseGene → Protein (encodes)
+    for path in sorted(GRAPH_DIR.glob("MouseGeneEncodesProtein-part*.csv")):
+        df = pd.read_csv(path, sep=";", dtype=str, header=None)
+        parts.append(pd.DataFrame({
+            "head":     df[0],
+            "relation": "encodes",
+            "tail":     df[2],
+        }))
+        print(f"  {path.name}: {len(df):,} рёбер encodes")
 
     result = pd.concat(parts, ignore_index=True)
     result = result.dropna()
